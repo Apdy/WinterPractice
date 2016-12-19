@@ -1,6 +1,10 @@
 //saverec.c
 
-//A version of linkedlist.c that is able to save these lists and read/write them into and out of a file called "studentList.txt".
+//pipe, mkpipe (one for write, one for read) for communication
+//but pipe needs to be used on the same machine
+//socket: need a port.
+//write a socket client that connects to router and prints whatever it sends
+
 
 typedef struct students {
   char name[21], id[7];
@@ -17,6 +21,8 @@ student makeStudent (char* name, char* id);
 void insertStudent (student first, student prev, student insert, int mode);
 student findStudent(student first, char* name);
 void printList(student front);
+void loadList();
+void saveList(student front);
 
 int main(int argc, char **argv) {
   char inputname[21], inputid[7], inputnext[21];
@@ -29,32 +35,8 @@ int main(int argc, char **argv) {
   printf("Create list from saved file? (yes/no)");
   scanf("%s", enter);
   if (strcmp(enter, "yes") == 0) {
-    int handle = open("studentList.txt", O_RDONLY|O_CREAT, 0640);
-    char insname[21], insid[7], entire[40];
-    student current, prev;
-    struct students readStudent;
-    //while (read(handle, insname, 21)) {
-    while (read(handle, &readStudent, sizeof(readStudent)) > 0) {
-      current = (student) malloc(sizeof(struct students));
-      *current = readStudent;
-
-      current->nextStudent = NULL;
-
-      if (firstStudent == 1) {
-	frontStudent = current;
-	firstStudent = 0;
-      }
-      else
-	prev->nextStudent = current;
-
-      printf("The updated list: \n");
-      printList(frontStudent);
-      
-      prev = current;
-    }
-    close(handle);
-
-    //printList(frontStudent);
+    loadList();
+    firstStudent = 0;
   }
   
   //make sure you can handle too-long input
@@ -98,7 +80,6 @@ int main(int argc, char **argv) {
       }
     }
 
-    printf("Here is the updated list of students:\n");
     printList(frontStudent);
 
     printf("Enter another? (yes/no)");
@@ -113,12 +94,15 @@ int main(int argc, char **argv) {
   scanf("%s", enter);
   if (strcmp(enter, "no") == 0)
     exit(0);
-  
+
+  saveList(frontStudent);
+
+  /*
   int handle = open("studentList.txt", O_WRONLY|O_CREAT, 0640);
   student current;
   for (current = frontStudent; current; current = current->nextStudent)
     write(handle, current, sizeof(struct students));
-  close(handle);
+    close(handle); */
     
 
 }
@@ -187,9 +171,45 @@ student findStudent(student first, char* name) {
 
 void printList(student front) {
   student slist;
+  printf("Here's the updated list of students: \n");
   for (slist = front; slist != NULL; slist = (student)(slist->nextStudent)) {
     printf("Name: %s, ", slist->name);
     printf("ID: %s, ", slist->id);
     printf("Next student pointer: %p \n", slist->nextStudent);
   }
+}
+
+void loadList() {
+  int handle = open("studentList.txt", O_RDONLY|O_CREAT, 0640);
+  char insname[21], insid[7], entire[40];
+  student current, prev, front;
+  struct students readStudent;
+  int firstStudent = 1;
+  while (read(handle, &readStudent, sizeof(readStudent)) > 0) {
+    current = (student) malloc(sizeof(struct students));
+    *current = readStudent;
+    
+    current->nextStudent = NULL;
+    
+    if (firstStudent == 1) {
+      front = current;
+      firstStudent = 0;
+    }
+    else
+      prev->nextStudent = current;
+    
+    prev = current;
+  }
+  close(handle);
+
+  printf("The updated list: \n");
+  printList(front);
+}
+
+void saveList(student front) {
+  int handle = open("studentList.txt", O_WRONLY|O_CREAT, 0640);
+  student current;
+  for (current = front; current; current = current->nextStudent)
+    write(handle, current, sizeof(struct students));
+  close(handle);
 }
