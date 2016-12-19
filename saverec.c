@@ -1,9 +1,6 @@
 //saverec.c
 
-//pipe, mkpipe (one for write, one for read) for communication
-//but pipe needs to be used on the same machine
-//socket: need a port.
-//write a socket client that connects to router and prints whatever it sends
+//same as linkedlist.c, but also allows you to save your list or load your list into another file.
 
 
 typedef struct students {
